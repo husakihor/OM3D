@@ -185,6 +185,9 @@ int main(int, char**) {
 
         // Render the scene
         {
+            glEnable(GL_CULL_FACE);
+            glCullFace(GL_BACK);
+            glFrontFace(GL_CCW);
             main_framebuffer.bind();
             scene_view.render();
         }
@@ -200,6 +203,8 @@ int main(int, char**) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         tonemap_framebuffer.blit();
 
+        // Disable Back Face Culling for UI display
+        glDisable(GL_CULL_FACE);
         // GUI
         imgui.start();
         {
