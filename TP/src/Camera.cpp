@@ -104,4 +104,18 @@ Frustum Camera::build_frustum() const {
     return frustum;
 }
 
+bool Frustum::intersect(const glm::vec3& position, float radius) const {
+    const auto& normals = {this->_bottom_normal, this->_left_normal, this->_near_normal, this->_right_normal, this->_top_normal};
+
+    for (const auto& normal : normals) {
+        glm::vec3 fixed_position = position + normal * radius;
+
+        if (glm::dot(fixed_position, normal) < 0) {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
 }

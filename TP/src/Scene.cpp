@@ -45,9 +45,15 @@ void Scene::render(const Camera& camera) const {
     }
     light_buffer.bind(BufferUsage::Storage, 1);
 
+    const auto position = camera.position();
+    const auto frustum = camera.build_frustum();
+
     // Render every object
     for(const SceneObject& obj : _objects) {
-        obj.render();
+        const glm::vec3 obj_position = obj.transform() * glm::vec4(0, 0, 0, 1);
+        if (frustum.intersect(obj_position - position, obj.sphere_radius())) {
+            obj.render();
+        }
     }
 }
 

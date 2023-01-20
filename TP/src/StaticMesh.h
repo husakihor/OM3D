@@ -4,6 +4,7 @@
 #include <graphics.h>
 #include <TypedBuffer.h>
 #include <Vertex.h>
+#include <Camera.h>
 
 #include <vector>
 
@@ -24,10 +25,12 @@ class StaticMesh : NonCopyable {
         StaticMesh(const MeshData& data);
 
         void draw() const;
+        float sphere_radius() const;
 
     private:
         TypedBuffer<Vertex> _vertex_buffer;
         TypedBuffer<u32> _index_buffer;
+        float _sphere_radius;
 };
 
 }

@@ -159,8 +159,8 @@ int main(int, char**) {
 
     ImGuiRenderer imgui(window);
 
-    std::unique_ptr<Scene> scene = create_default_scene(); // DEFAULT SCENE
-    // std::unique_ptr<Scene> scene = create_forest_scene(); // FOREST SCENE
+    //std::unique_ptr<Scene> scene = create_default_scene(); // DEFAULT SCENE
+    std::unique_ptr<Scene> scene = create_forest_scene(); // FOREST SCENE
     SceneView scene_view(scene.get());
 
     auto tonemap_program = Program::from_file("tonemap.comp");
