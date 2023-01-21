@@ -21,6 +21,11 @@ void Material::set_depth_test_mode(DepthTestMode depth) {
     _depth_test_mode = depth;
 }
 
+void Material::set_cull_mode(CullMode cull)
+{
+    _cull_mode = cull;
+}
+
 void Material::set_texture(u32 slot, std::shared_ptr<Texture> tex) {
     if(const auto it = std::find_if(_textures.begin(), _textures.end(), [&](const auto& t) { return t.second == tex; }); it != _textures.end()) {
         it->second = std::move(tex);
@@ -29,39 +34,76 @@ void Material::set_texture(u32 slot, std::shared_ptr<Texture> tex) {
     }
 }
 
+void Material::reset_modes() {
+    glDisable(GL_BLEND);
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_DEPTH_TEST);
+}
+
 void Material::bind() const {
     switch(_blend_mode) {
         case BlendMode::None:
             glDisable(GL_BLEND);
-        break;
+            break;
 
         case BlendMode::Alpha:
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        break;
+            break;
+
+        case BlendMode::Add:
+            glEnable(GL_BLEND);
+            glDepthMask(GL_FALSE);
+            glBlendEquation(GL_FUNC_ADD);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+            break;
     }
 
     switch(_depth_test_mode) {
         case DepthTestMode::None:
             glDisable(GL_DEPTH_TEST);
-        break;
+            break;
 
         case DepthTestMode::Equal:
             glEnable(GL_DEPTH_TEST);
             glDepthFunc(GL_EQUAL);
-        break;
+            break;
 
         case DepthTestMode::Standard:
             glEnable(GL_DEPTH_TEST);
             // We are using reverse-Z
             glDepthFunc(GL_GEQUAL);
-        break;
+            break;
 
         case DepthTestMode::Reversed:
             glEnable(GL_DEPTH_TEST);
             // We are using reverse-Z
             glDepthFunc(GL_LEQUAL);
-        break;
+            break;
+    }
+
+    switch (_cull_mode) {
+        case CullMode::None:
+            glDisable(GL_CULL_FACE);
+            break;
+
+        case CullMode::Back:
+            glEnable(GL_CULL_FACE);
+            glCullFace(GL_BACK);
+            glFrontFace(GL_CCW);
+            break;
+
+        case CullMode::Front:
+            glEnable(GL_CULL_FACE);
+            glCullFace(GL_FRONT);
+            glFrontFace(GL_CCW);
+            break;
+
+        case CullMode::Both:
+            glEnable(GL_CULL_FACE);
+            glCullFace(GL_FRONT_AND_BACK);
+            glFrontFace(GL_CCW);
+            break;
     }
 
     for(const auto& texture : _textures) {

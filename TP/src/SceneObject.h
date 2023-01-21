@@ -18,6 +18,7 @@ class SceneObject : NonCopyable {
         void render() const;
 
         void set_transform(const glm::mat4& tr);
+        void set_transparent();
         const glm::mat4& transform() const;
         float sphere_radius() const;
 

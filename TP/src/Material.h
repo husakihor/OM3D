@@ -12,6 +12,7 @@ namespace OM3D {
 enum class BlendMode {
     None,
     Alpha,
+    Add
 };
 
 enum class DepthTestMode {
@@ -19,6 +20,13 @@ enum class DepthTestMode {
     Reversed,
     Equal,
     None
+};
+
+enum class CullMode {
+    None,
+    Front,
+    Back,
+    Both
 };
 
 class Material {
@@ -29,6 +37,8 @@ class Material {
         void set_program(std::shared_ptr<Program> prog);
         void set_blend_mode(BlendMode blend);
         void set_depth_test_mode(DepthTestMode depth);
+        void set_cull_mode(CullMode cull);
+        void reset_modes();
         void set_texture(u32 slot, std::shared_ptr<Texture> tex);
 
         template<typename... Args>
@@ -50,6 +60,7 @@ class Material {
 
         BlendMode _blend_mode = BlendMode::None;
         DepthTestMode _depth_test_mode = DepthTestMode::Standard;
+        CullMode _cull_mode = CullMode::None;
 
 };
 

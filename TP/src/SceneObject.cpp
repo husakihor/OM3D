@@ -9,14 +9,21 @@ SceneObject::SceneObject(std::shared_ptr<StaticMesh> mesh, std::shared_ptr<Mater
     _material(std::move(material)) {
 }
 
+void SceneObject::set_transparent() {
+    this->_material->set_blend_mode(BlendMode::Add);
+}
+
 void SceneObject::render() const {
     if(!_material || !_mesh) {
         return;
     }
+    int random = std::rand() % 100;
+    if (random >= 50) _material->set_blend_mode(BlendMode::Add);
+    _material->set_uniform(HASH("model"), transform());
 
-   _material->set_uniform(HASH("model"), transform());
-   _material->bind();
-   _mesh->draw();
+    _material->bind();
+    _mesh->draw();
+    _material->reset_modes();
 }
 
 float SceneObject::sphere_radius() const {
