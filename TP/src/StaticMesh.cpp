@@ -11,12 +11,12 @@ StaticMesh::StaticMesh(const MeshData& data) :
     _sphere_radius = 0.0f;
     for (auto& vertex : data.vertices) {
         const auto& positon = vertex.position;
-        _sphere_radius = std::max(sqrt(positon.x * positon.x + positon.y * positon.y + positon.z * positon.z
+        _sphere_radius = std::max<float>(sqrt(positon.x * positon.x + positon.y * positon.y + positon.z * positon.z
         ), _sphere_radius);
     }
 }
 
-void StaticMesh::draw() const {
+void StaticMesh::draw(int count) const {
     _vertex_buffer.bind(BufferUsage::Attribute);
     _index_buffer.bind(BufferUsage::Index);
 
@@ -37,7 +37,7 @@ void StaticMesh::draw() const {
     glEnableVertexAttribArray(3);
     glEnableVertexAttribArray(4);
 
-    glDrawElements(GL_TRIANGLES, int(_index_buffer.element_count()), GL_UNSIGNED_INT, nullptr);
+    glDrawElementsInstanced(GL_TRIANGLES, int(_index_buffer.element_count()), GL_UNSIGNED_INT, nullptr, count);
 }
 
 float StaticMesh::sphere_radius() const {

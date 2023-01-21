@@ -24,7 +24,7 @@ class StaticMesh : NonCopyable {
 
         StaticMesh(const MeshData& data);
 
-        void draw() const;
+        void draw(int count) const;
         float sphere_radius() const;
 
     private:

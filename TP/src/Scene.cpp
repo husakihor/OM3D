@@ -4,13 +4,19 @@
 
 #include <shader_structs.h>
 
+#include <iostream>
+
 namespace OM3D {
 
 Scene::Scene() {
 }
 
-void Scene::add_object(SceneObject obj) {
-    _objects.emplace_back(std::move(obj));
+void Scene::add_object(SceneObject obj, int instance) {
+    if (_objects_instance.find(instance) == _objects_instance.end()) {
+        _objects_instance.emplace(instance, std::move(obj));
+    }
+    auto& vec = _objects_transform[instance];
+    vec.emplace_back(obj.transform());
 }
 
 void Scene::add_object(PointLight obj) {
@@ -49,11 +55,24 @@ void Scene::render(const Camera& camera) const {
     const auto frustum = camera.build_frustum();
 
     // Render every object
-    for(const SceneObject& obj : _objects) {
-        const glm::vec3 obj_position = obj.transform() * glm::vec4(0, 0, 0, 1);
-        if (frustum.intersect(obj_position - position, obj.sphere_radius())) {
-            obj.render();
+    for (const auto& instance : _objects_instance) {
+        int identifier = instance.first;
+        const auto& obj = instance.second;
+
+        const auto& transforms = _objects_transform.at(identifier);
+        TypedBuffer<glm::mat4> transform_buffer(nullptr, transforms.size());
+        int count = 0;
+        {
+            auto mapping = transform_buffer.map(AccessType::WriteOnly);
+            for (const auto& transform : transforms) {
+                const glm::vec3 obj_position = transform * glm::vec4(0, 0, 0, 1);
+                if (frustum.intersect(obj_position - position, obj.sphere_radius())) {
+                    mapping[count++] = transform;
+                }
+            }
         }
+        transform_buffer.bind(BufferUsage::Storage, 2);
+        obj.render(count);
     }
 }
 
