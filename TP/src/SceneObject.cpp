@@ -1,6 +1,7 @@
 #include "SceneObject.h"
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <iostream>
 
 namespace OM3D {
 
@@ -17,8 +18,8 @@ void SceneObject::render() const {
     if(!_material || !_mesh) {
         return;
     }
-    int random = std::rand() % 100;
-    if (random >= 50) _material->set_blend_mode(BlendMode::Add);
+    std::cout << _mesh->sphere_radius() << std::endl;
+    if (_mesh->sphere_radius() >= 1) _material->set_blend_mode(BlendMode::Add);
     _material->set_uniform(HASH("model"), transform());
 
     _material->bind();
