@@ -11,7 +11,7 @@ StaticMesh::StaticMesh(const MeshData& data) :
     _sphere_radius = 0.0f;
     for (auto& vertex : data.vertices) {
         const auto& positon = vertex.position;
-        _sphere_radius = std::max(sqrt(positon.x * positon.x + positon.y * positon.y + positon.z * positon.z
+        _sphere_radius = std::max<float>(sqrt(positon.x * positon.x + positon.y * positon.y + positon.z * positon.z
         ), _sphere_radius);
     }
 }
