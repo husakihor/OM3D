@@ -39,7 +39,8 @@ void main() {
 
     float depth = texelFetch(in_depth, ivec2(gl_FragCoord.xy), 0).r;
     if (depth == 0.0) {
-        discard;
+        out_color = vec4(1.0);
+        return;
     }
 
     vec2 uv = gl_FragCoord.xy / vec2(window.width, window.height);
