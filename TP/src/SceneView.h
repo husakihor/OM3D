@@ -3,6 +3,8 @@
 
 #include <Scene.h>
 #include <Camera.h>
+#include <TypedBuffer.h>
+#include <shader_structs.h>
 
 namespace OM3D {
 
@@ -14,6 +16,8 @@ class SceneView {
         const Camera& camera() const;
 
         void render() const;
+        TypedBuffer<shader::FrameData> get_frame_buffer() const;
+        TypedBuffer<shader::PointLight> get_light_buffer() const;
 
     private:
         const Scene* _scene = nullptr;

@@ -30,6 +30,7 @@ class Material {
         void set_blend_mode(BlendMode blend);
         void set_depth_test_mode(DepthTestMode depth);
         void set_texture(u32 slot, std::shared_ptr<Texture> tex);
+        void set_depth_mask(bool val);
 
         template<typename... Args>
         void set_uniform(Args&&... args) {
@@ -50,7 +51,7 @@ class Material {
 
         BlendMode _blend_mode = BlendMode::None;
         DepthTestMode _depth_test_mode = DepthTestMode::Standard;
-
+        bool _depth_mask;
 };
 
 }

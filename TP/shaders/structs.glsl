@@ -19,3 +19,7 @@ struct PointLight {
     float padding_1;
 };
 
+struct Window {
+    float width;
+    float height;
+};

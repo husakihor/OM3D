@@ -19,4 +19,11 @@ void SceneView::render() const {
     }
 }
 
+TypedBuffer<shader::FrameData> SceneView::get_frame_buffer() const {
+    return _scene->get_frame_buffer(_camera);
+}
+
+TypedBuffer<shader::PointLight> SceneView::get_light_buffer() const {
+    return _scene->get_light_buffer();
+}
 }

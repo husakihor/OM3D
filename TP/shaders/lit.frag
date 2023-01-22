@@ -4,45 +4,52 @@
 
 // fragment shader of the main lighting pass
 
-// #define DEBUG_NORMAL
-
 layout(location = 0) out vec4 out_color;
 
-layout(location = 0) in vec3 in_normal;
-layout(location = 1) in vec2 in_uv;
-layout(location = 2) in vec3 in_color;
-layout(location = 3) in vec3 in_position;
-layout(location = 4) in vec3 in_tangent;
-layout(location = 5) in vec3 in_bitangent;
+layout(binding = 0) uniform sampler2D in_albedo;
+layout(binding = 1) uniform sampler2D in_normal;
+layout(binding = 2) uniform sampler2D in_depth;
 
-layout(binding = 0) uniform sampler2D in_texture;
-layout(binding = 1) uniform sampler2D in_normal_texture;
-
-layout(binding = 0) uniform Data {
+layout(binding = 3) uniform Data {
     FrameData frame;
 };
 
-layout(binding = 1) buffer PointLights {
+layout(binding = 4) buffer PointLights {
     PointLight point_lights[];
+};
+
+layout(binding = 5) uniform WindowData {
+    Window window;
 };
 
 const vec3 ambient = vec3(0.0);
 
 void main() {
-#ifdef NORMAL_MAPPED
-    const vec3 normal_map = unpack_normal_map(texture(in_normal_texture, in_uv).xy);
-    const vec3 normal = normal_map.x * in_tangent +
-                        normal_map.y * in_bitangent +
-                        normal_map.z * in_normal;
+    vec4 encoded_albedo = texelFetch(in_albedo, ivec2(gl_FragCoord.xy), 0);
+    vec4 encoded_normal = texelFetch(in_normal, ivec2(gl_FragCoord.xy), 0);
+
+#if defined(NORMAL_DISPLAY)
+    out_color = vec4(encoded_normal.xyz, 1.0);
+#elif defined(ALBEDO_DISPLAY)
+    out_color = vec4(encoded_albedo.rgb, 1.0);
 #else
-    const vec3 normal = in_normal;
-#endif
+    vec3 albedo = encoded_albedo.rgb;
+    vec3 normal = encoded_normal.xyz;
+    normal = normal * 2.0 - 1.0;
+
+    float depth = texelFetch(in_depth, ivec2(gl_FragCoord.xy), 0).r;
+    if (depth == 0.0) {
+        discard;
+    }
+
+    vec2 uv = gl_FragCoord.xy / vec2(window.width, window.height);
+    vec3 position = unproject(uv, depth, inverse(frame.camera.view_proj));
 
     vec3 acc = frame.sun_color * max(0.0, dot(frame.sun_dir, normal)) + ambient;
 
-    for(uint i = 0; i != frame.point_light_count; ++i) {
+    for(uint i = 0; i < frame.point_light_count; ++i) {
         PointLight light = point_lights[i];
-        const vec3 to_light = (light.position - in_position);
+        const vec3 to_light = (light.position - position);
         const float dist = length(to_light);
         const vec3 light_vec = to_light / dist;
 
@@ -55,14 +62,7 @@ void main() {
         acc += light.color * (NoL * att);
     }
 
-    out_color = vec4(in_color * acc, 1.0);
-
-#ifdef TEXTURED
-    out_color *= texture(in_texture, in_uv);
-#endif
-
-#ifdef DEBUG_NORMAL
-    out_color = vec4(normal * 0.5 + 0.5, 1.0);
+    out_color = vec4(albedo * acc, 1.0);
 #endif
 }
 

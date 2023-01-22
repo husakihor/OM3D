@@ -90,7 +90,6 @@ std::unique_ptr<Scene> create_default_scene() {
     auto result = Scene::from_gltf(std::string(data_path) + "cube.glb");
     ALWAYS_ASSERT(result.is_ok, "Unable to load default scene");
     scene = std::move(result.value);
-
     // Add lights
     {
         PointLight light;
@@ -118,18 +117,18 @@ std::unique_ptr<Scene> create_forest_scene() {
     ALWAYS_ASSERT(result.is_ok, "Unable to load forest scene");
     scene = std::move(result.value);
     // Add lights
-    {
+    /*{
         PointLight light;
         light.set_position(glm::vec3(1.0f, 2.0f, 4.0f));
         light.set_color(glm::vec3(0.0f, 10.0f, 0.0f));
         light.set_radius(100.0f);
         scene->add_object(std::move(light));
-    }
+    }*/
     {
         PointLight light;
-        light.set_position(glm::vec3(1.0f, 2.0f, -4.0f));
-        light.set_color(glm::vec3(10.0f, 0.0f, 0.0f));
-        light.set_radius(50.0f);
+        light.set_position(glm::vec3(50.0f, 50.0f, 0.0f));
+        light.set_color(glm::vec3(500.0f, 0.0f, 0.0f));
+        light.set_radius(10000.0f);
         scene->add_object(std::move(light));
     }
 
@@ -162,14 +161,38 @@ int main(int, char**) {
     //std::unique_ptr<Scene> scene = create_default_scene(); // DEFAULT SCENE
     std::unique_ptr<Scene> scene = create_forest_scene(); // FOREST SCENE
     SceneView scene_view(scene.get());
+    scene_view.camera().set_view(glm::lookAt(glm::vec3(290.0f, 120.0f, 211.0f), glm::vec3(0.0f, 20.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)));
 
     auto tonemap_program = Program::from_file("tonemap.comp");
-
-    Texture depth(window_size, ImageFormat::Depth32_FLOAT);
-    Texture lit(window_size, ImageFormat::RGBA16_FLOAT);
     Texture color(window_size, ImageFormat::RGBA8_UNORM);
-    Framebuffer main_framebuffer(&depth, std::array{&lit});
-    Framebuffer tonemap_framebuffer(nullptr, std::array{&color});
+    Framebuffer tonemap_framebuffer(nullptr, std::array{ &color });
+
+    auto albedo = std::make_shared<Texture>(window_size, ImageFormat::RGBA8_UNORM);
+    auto normal = std::make_shared<Texture>(window_size, ImageFormat::RGBA8_UNORM);
+    auto depth = std::make_shared<Texture>(window_size, ImageFormat::Depth32_FLOAT);
+
+    Texture lit(window_size, ImageFormat::RGBA16_FLOAT);
+    Framebuffer main_framebuffer(depth.get(), std::array{&lit});
+
+    Framebuffer g_buffer(depth.get(), std::array{ albedo.get(), normal.get() });
+
+    std::shared_ptr<Program> display_programs[] = {
+        Program::from_files("lit.frag", "screen.vert"),
+        Program::from_files("lit.frag", "screen.vert", {"NORMAL_DISPLAY"}),
+        Program::from_files("lit.frag", "screen.vert", {"ALBEDO_DISPLAY"})
+    };
+
+    Material g_buffer_material;
+    g_buffer_material.set_program(display_programs[0]);
+    g_buffer_material.set_texture(0, albedo);
+    g_buffer_material.set_texture(1, normal);
+    g_buffer_material.set_texture(2, depth);
+    g_buffer_material.set_depth_mask(false);
+    g_buffer_material.set_blend_mode(BlendMode::Alpha);
+    g_buffer_material.set_depth_test_mode(DepthTestMode::None);
+
+    bool normal_display = false;
+    bool albedo_display = false;
 
     for(;;) {
         glfwPollEvents();
@@ -185,11 +208,29 @@ int main(int, char**) {
 
         // Render the scene
         {
-            glEnable(GL_CULL_FACE);
-            glCullFace(GL_BACK);
-            glFrontFace(GL_CCW);
-            main_framebuffer.bind();
+            // main_framebuffer.bind();
+            g_buffer.bind();
             scene_view.render();
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        }
+
+        {
+            g_buffer_material.bind();
+            main_framebuffer.bind();
+
+            auto buffer = scene_view.get_frame_buffer();
+            buffer.bind(BufferUsage::Uniform, 3);
+            auto light_buffer = scene_view.get_light_buffer();
+            light_buffer.bind(BufferUsage::Storage, 4);
+            TypedBuffer<shader::Window> window_buffer(nullptr, 1);
+            {
+                auto mapping = window_buffer.map(AccessType::WriteOnly);
+                mapping[0].height = float(window_size.y);
+                mapping[0].width = float(window_size.x);
+            }
+            window_buffer.bind(BufferUsage::Uniform, 5);
+
+            glDrawArrays(GL_TRIANGLES, 0, 3);
         }
 
         // Apply a tonemap in compute shader
@@ -197,7 +238,7 @@ int main(int, char**) {
             tonemap_program->bind();
             lit.bind(0);
             color.bind_as_image(1, AccessType::WriteOnly);
-            glDispatchCompute(align_up_to(window_size.x, 8), align_up_to(window_size.y, 8), 1);
+            glDispatchCompute(align_up_to(window_size.x, 8) / 8, align_up_to(window_size.y, 8) / 8, 1);
         }
         // Blit tonemap result to screen
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -210,13 +251,45 @@ int main(int, char**) {
         {
             char buffer[1024] = {};
             if(ImGui::InputText("Load scene", buffer, sizeof(buffer), ImGuiInputTextFlags_EnterReturnsTrue)) {
-                auto result = Scene::from_gltf(buffer);
+                auto result = Scene::from_gltf(std::string(data_path) + buffer);
                 if(!result.is_ok) {
                     std::cerr << "Unable to load scene (" << buffer << ")" << std::endl;
                 } else {
                     scene = std::move(result.value);
                     scene_view = SceneView(scene.get());
                 }
+            }
+            ImGui::NewLine();
+
+            ImGui::Text("Display debug mode :");
+            if (albedo_display) {
+                ImGui::BeginDisabled();
+            }
+            if (ImGui::Checkbox("Normals", &normal_display) && !albedo_display) {
+                if (!normal_display) {
+                    g_buffer_material.set_program(display_programs[0]);
+                }
+                else {
+                    g_buffer_material.set_program(display_programs[1]);
+                }
+            }
+            if (albedo_display) {
+                ImGui::EndDisabled();
+            }
+
+            if (normal_display) {
+                ImGui::BeginDisabled();
+            }
+            if (ImGui::Checkbox("Albedo", &albedo_display) && !normal_display) {
+                if (!albedo_display) {
+                    g_buffer_material.set_program(display_programs[0]);
+                }
+                else {
+                    g_buffer_material.set_program(display_programs[2]);
+                }
+            }
+            if (normal_display) {
+                ImGui::EndDisabled();
             }
         }
         imgui.finish();

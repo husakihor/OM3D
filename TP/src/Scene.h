@@ -4,6 +4,8 @@
 #include <SceneObject.h>
 #include <PointLight.h>
 #include <Camera.h>
+#include <TypedBuffer.h>
+#include <shader_structs.h>
 
 #include <vector>
 #include <map>
@@ -22,6 +24,9 @@ class Scene : NonMovable {
 
         void add_object(SceneObject obj, int instance = -1);
         void add_object(PointLight obj);
+
+        TypedBuffer<shader::FrameData> get_frame_buffer(const Camera& camera) const;
+        TypedBuffer<shader::PointLight> get_light_buffer() const;
 
     private:
         std::map<int, std::vector<glm::mat4>> _objects_transform;
