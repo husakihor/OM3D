@@ -8,6 +8,7 @@
 
 #include <vector>
 #include <memory>
+#include <cstring>
 
 
 namespace OM3D {
