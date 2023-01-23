@@ -164,21 +164,21 @@ int main(int, char**) {
         std::cerr << "Failed to load skybox!" << std::endl;
         std::exit(1);
     }
-    auto skybox_stairs = std::make_shared<Texture>(skybox_data.value, true);
+    auto skybox_stairs = std::make_shared<Texture>(skybox_data.value, false);
 
     skybox_data = TextureData::from_file(std::string(data_path) + "Factory_Catwalk_Bg.jpg");
     if (!skybox_data.is_ok) {
         std::cerr << "Failed to load skybox!" << std::endl;
         std::exit(1);
     }
-    auto skybox_catwalk = std::make_shared<Texture>(skybox_data.value, true);
+    auto skybox_catwalk = std::make_shared<Texture>(skybox_data.value, false);
 
     skybox_data = TextureData::from_file(std::string(data_path) + "Ridgecrest_Road_4k_Bg.jpg");
     if (!skybox_data.is_ok) {
         std::cerr << "Failed to load skybox!" << std::endl;
         std::exit(1);
     }
-    auto skybox_ridgecrest_road = std::make_shared<Texture>(skybox_data.value, true);
+    auto skybox_ridgecrest_road = std::make_shared<Texture>(skybox_data.value, false);
 
     //std::unique_ptr<Scene> scene = create_default_scene(); // DEFAULT SCENE
     std::unique_ptr<Scene> scene = create_forest_scene(); // FOREST SCENE
