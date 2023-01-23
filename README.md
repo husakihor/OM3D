@@ -38,6 +38,34 @@ switch(_blend_mode)
 
 If you run the code you will see the `forest.glb` scene with transparent trees and opaque stones.
 
+
+In this version of the code we also handle the backface culling from the first Practical with the following code:
+```c++
+switch (_cull_mode) {
+        case CullMode::None:
+            glDisable(GL_CULL_FACE);
+            break;
+
+        case CullMode::Back:
+            glEnable(GL_CULL_FACE);
+            glCullFace(GL_BACK);
+            glFrontFace(GL_CCW);
+            break;
+
+        case CullMode::Front:
+            glEnable(GL_CULL_FACE);
+            glCullFace(GL_FRONT);
+            glFrontFace(GL_CCW);
+            break;
+
+        case CullMode::Both:
+            glEnable(GL_CULL_FACE);
+            glCullFace(GL_FRONT_AND_BACK);
+            glFrontFace(GL_CCW);
+            break;
+    }
+```
+
 ### Contact
 If you have a problem, please send a mail to :
 - ihor.husak@epita.fr
