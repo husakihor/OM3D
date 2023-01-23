@@ -19,7 +19,7 @@ In order to make materials transparent we had to add a new BlendMode and a new b
 
 The new mode `Add` is defined in the enum class `BlendMode`.
 
-Below you can find the behavior specific to materials for which this `BlendMode` has been set
+Below you can find the behavior specific to materials for which this `BlendMode` has been set.
 
 ```c++
 switch(_blend_mode) 
@@ -39,6 +39,6 @@ switch(_blend_mode)
 If you run the code you will see the `forest.glb` scene with transparent trees and opaque stones.
 
 ### Contact
-If you have a problem, please send a mail to
+If you have a problem, please send a mail to :
 - ihor.husak@epita.fr
 - benoist.andre@epita.fr
