@@ -8,7 +8,7 @@ StaticMesh::StaticMesh(const MeshData& data) :
     _vertex_buffer(data.vertices),
     _index_buffer(data.indices) {
 
-    _sphere_radius = 0.0f;
+    _sphere_radius = 20.0f;
     for (auto& vertex : data.vertices) {
         const auto& positon = vertex.position;
         _sphere_radius = std::max<float>(sqrt(positon.x * positon.x + positon.y * positon.y + positon.z * positon.z

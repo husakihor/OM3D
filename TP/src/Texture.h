@@ -29,7 +29,7 @@ class Texture {
 
         ~Texture();
 
-        Texture(const TextureData& data);
+        Texture(const TextureData& data, bool blurrMipMap = false);
         Texture(const glm::uvec2 &size, ImageFormat format);
 
         void bind(u32 index) const;

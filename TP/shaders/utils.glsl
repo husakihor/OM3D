@@ -1,5 +1,7 @@
 #include "structs.glsl"
 
+const float PI = 3.1415926535897932384626433832795028841971693993751058209749445923078164062;
+
 float sqr(float x) {
     return x * x;
 }
@@ -64,4 +66,10 @@ vec3 unproject(vec2 uv, float depth, mat4 inv_viewproj) {
     const vec3 ndc = vec3(uv * 2.0 - vec2(1.0), depth);
     const vec4 p = inv_viewproj * vec4(ndc, 1.0);
     return p.xyz / p.w;
+}
+
+float atan2(float y, float x)
+{
+    bool s = (abs(x) > abs(y));
+    return mix(PI / 2.0 - atan(x, y), atan(y, x), s);
 }

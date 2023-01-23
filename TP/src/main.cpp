@@ -158,6 +158,28 @@ int main(int, char**) {
 
     ImGuiRenderer imgui(window);
 
+    // Skybox (for IBL)
+    auto skybox_data = TextureData::from_file(std::string(data_path) + "10-Shiodome_Stairs_8k.jpg");
+    if (!skybox_data.is_ok) {
+        std::cerr << "Failed to load skybox!" << std::endl;
+        std::exit(1);
+    }
+    auto skybox_stairs = std::make_shared<Texture>(skybox_data.value, true);
+
+    skybox_data = TextureData::from_file(std::string(data_path) + "Factory_Catwalk_Bg.jpg");
+    if (!skybox_data.is_ok) {
+        std::cerr << "Failed to load skybox!" << std::endl;
+        std::exit(1);
+    }
+    auto skybox_catwalk = std::make_shared<Texture>(skybox_data.value, true);
+
+    skybox_data = TextureData::from_file(std::string(data_path) + "Ridgecrest_Road_4k_Bg.jpg");
+    if (!skybox_data.is_ok) {
+        std::cerr << "Failed to load skybox!" << std::endl;
+        std::exit(1);
+    }
+    auto skybox_ridgecrest_road = std::make_shared<Texture>(skybox_data.value, true);
+
     //std::unique_ptr<Scene> scene = create_default_scene(); // DEFAULT SCENE
     std::unique_ptr<Scene> scene = create_forest_scene(); // FOREST SCENE
     SceneView scene_view(scene.get());
@@ -179,7 +201,8 @@ int main(int, char**) {
     std::shared_ptr<Program> display_programs[] = {
         Program::from_files("lit.frag", "screen.vert"),
         Program::from_files("lit.frag", "screen.vert", {"NORMAL_DISPLAY"}),
-        Program::from_files("lit.frag", "screen.vert", {"ALBEDO_DISPLAY"})
+        Program::from_files("lit.frag", "screen.vert", {"ALBEDO_DISPLAY"}),
+        Program::from_files("lit.frag", "screen.vert", {"IBL_DISPLAY"})
     };
 
     Material g_buffer_material;
@@ -187,12 +210,14 @@ int main(int, char**) {
     g_buffer_material.set_texture(0, albedo);
     g_buffer_material.set_texture(1, normal);
     g_buffer_material.set_texture(2, depth);
+    g_buffer_material.set_texture(6, skybox_stairs);
     g_buffer_material.set_depth_mask(false);
     g_buffer_material.set_blend_mode(BlendMode::Alpha);
     g_buffer_material.set_depth_test_mode(DepthTestMode::None);
 
     bool normal_display = false;
     bool albedo_display = false;
+    bool ibl_display = false;
 
     for(;;) {
         glfwPollEvents();
@@ -262,10 +287,11 @@ int main(int, char**) {
             ImGui::NewLine();
 
             ImGui::Text("Display debug mode :");
-            if (albedo_display) {
+            bool disabled = (albedo_display || ibl_display);
+            if (disabled) {
                 ImGui::BeginDisabled();
             }
-            if (ImGui::Checkbox("Normals", &normal_display) && !albedo_display) {
+            if (ImGui::Checkbox("Normals", &normal_display) && !disabled) {
                 if (!normal_display) {
                     g_buffer_material.set_program(display_programs[0]);
                 }
@@ -273,14 +299,15 @@ int main(int, char**) {
                     g_buffer_material.set_program(display_programs[1]);
                 }
             }
-            if (albedo_display) {
+            if (disabled) {
                 ImGui::EndDisabled();
             }
 
-            if (normal_display) {
+            disabled = (normal_display || ibl_display);
+            if (disabled) {
                 ImGui::BeginDisabled();
             }
-            if (ImGui::Checkbox("Albedo", &albedo_display) && !normal_display) {
+            if (ImGui::Checkbox("Albedo", &albedo_display) && !disabled) {
                 if (!albedo_display) {
                     g_buffer_material.set_program(display_programs[0]);
                 }
@@ -288,7 +315,43 @@ int main(int, char**) {
                     g_buffer_material.set_program(display_programs[2]);
                 }
             }
-            if (normal_display) {
+            if (disabled) {
+                ImGui::EndDisabled();
+            }
+
+            disabled = (normal_display || albedo_display);
+            if (disabled) {
+                ImGui::BeginDisabled();
+            }
+            if (ImGui::Checkbox("IBL", &ibl_display) && !disabled) {
+                if (!ibl_display) {
+                    g_buffer_material.set_program(display_programs[0]);
+                }
+                else {
+                    g_buffer_material.set_program(display_programs[3]);
+                }
+            }
+            if (disabled) {
+                ImGui::EndDisabled();
+            }
+
+            ImGui::Text("IBL :");
+            if (!ibl_display) {
+                ImGui::BeginDisabled();
+            }
+            {
+                if (ImGui::Button("Shiodome Stairs")) {
+                    std::cout << "pressed" << std::endl;
+                    g_buffer_material.set_texture(6, skybox_stairs);
+                }
+                if (ImGui::Button("Factory Catwalk")) {
+                    g_buffer_material.set_texture(6, skybox_catwalk);
+                }
+                if (ImGui::Button("Ridgecrest Road")) {
+                    g_buffer_material.set_texture(6, skybox_ridgecrest_road);
+                }
+            }
+            if (!ibl_display) {
                 ImGui::EndDisabled();
             }
         }

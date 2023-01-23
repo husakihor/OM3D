@@ -12,6 +12,7 @@ TypedBuffer<shader::FrameData> Scene::get_frame_buffer(const Camera& camera) con
     {
         auto mapping = buffer.map(AccessType::WriteOnly);
         mapping[0].camera.view_proj = camera.view_proj_matrix();
+        mapping[0].camera.position = camera.position();
         mapping[0].point_light_count = u32(_point_lights.size());
         mapping[0].sun_color = glm::vec3(1.0f, 1.0f, 1.0f);
         mapping[0].sun_dir = glm::normalize(_sun_direction);

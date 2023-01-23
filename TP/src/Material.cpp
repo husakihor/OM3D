@@ -26,7 +26,7 @@ void Material::set_depth_mask(bool val) {
 }
 
 void Material::set_texture(u32 slot, std::shared_ptr<Texture> tex) {
-    if(const auto it = std::find_if(_textures.begin(), _textures.end(), [&](const auto& t) { return t.second == tex; }); it != _textures.end()) {
+    if (const auto it = std::find_if(_textures.begin(), _textures.end(), [&](const auto& t) { return t.first == slot; }); it != _textures.end()) {
         it->second = std::move(tex);
     } else {
         _textures.emplace_back(slot, std::move(tex));
