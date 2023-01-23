@@ -1,12 +1,9 @@
-# OM3D
-EPITA course for 5th year students
+# OM3D - Transparency
 
-Slides: https://docs.google.com/presentation/d/1qJhH0cmEMVQRhF37UOYDdw0ZKtd00_oQXW1dZrUbSL4/edit
+## Authors 
 
-TP1: https://hackmd.io/@G2s9zdzlSd-RfTlBoN_x2A/ryY2BSgVo
-
-TP2&3: https://hackmd.io/@G2s9zdzlSd-RfTlBoN_x2A/Bkm_EOFHo
-
+* Ihor Husak
+* Benoist Andre
 
 ### How to build
 Requirements: cmake 3.20 minimum, C++17, and OpenGL 4.5.
@@ -18,7 +15,30 @@ cmake ../..
 make
 ```
 
+In order to make materials transparent we had to add a new BlendMode and a new behavior to the Material class.
+
+The new mode `Add` is defined in the enum class `BlendMode`.
+
+Below you can find the behavior specific to materials for which this `BlendMode` has been set
+
+```c++
+switch(_blend_mode) 
+{
+        // Other BlendModes
+        ...
+        // Transparency BlendMode
+        case BlendMode::Add:
+            glEnable(GL_BLEND);
+            glDepthMask(GL_FALSE);
+            glBlendEquation(GL_FUNC_ADD);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+            break;
+    }
+```
+
+If you run the code you will see the `forest.glb` scene with transparent trees and opaque stones.
+
 ### Contact
 If you have a problem, please send a mail to
-- alexandre.lamure@epita.fr
-- gregoire.angerand@gmail.com
+- ihor.husak@epita.fr
+- benoist.andre@epita.fr
